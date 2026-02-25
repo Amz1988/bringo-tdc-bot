@@ -27,7 +27,7 @@ from google.oauth2.service_account import Credentials
 # ─── CONFIGURATION ───────────────────────────────────────────────────────────
 TELEGRAM_TOKEN   = "8447041739:AAGRFcrTQ6ZVKBJ_xF6tyTQHYbGg8y1zrUo"
 GOOGLE_SHEET_ID  = "1wshADdZVfo_istMjrpk4iZiuQoDtLoTsLzEwsqmu1k0"
-CREDENTIALS_FILE = "credentials.json"          # Fichier service account Google
+CREDENTIALS_FILE = "credentials.json" if os.path.exists("credentials.json") else "credentials.json.json"
 ALERT_CHAT_ID    = None                        # ID du groupe/canal pour alertes (optionnel)
 
 # Utilisateurs autorisés (Telegram user_id) — laisser vide pour tout autoriser
@@ -44,13 +44,28 @@ TYPES_INCIDENT = [
     ["🚚 Retard livreur",    "📦 Rupture stock"],
     ["🕐 Slot indisponible", "🔒 Commande bloquée"],
     ["💻 Système lent",      "💳 Problème paiement"],
-    ["❓ Autre"]
+    ["🚗 Accident livreur",  "❓ Autre"]
 ]
 
 ZONES = [
     ["🏙 Casablanca Centre",  "🌆 Ain Sebaâ"],
     ["🏘 Hay Hassani",        "🏖 Ain Diab"],
-    ["🌍 Tous secteurs",      "📍 Autre zone"]
+    ["🕌 Sidi Maarouf",       "🌍 Tous secteurs"],
+    ["📍 Autre zone"]
+]
+
+DESCRIPTIONS = [
+    ["Retard livraison suite accident",  "Livreur bloqué en route"],
+    ["Rupture stock produit principal",  "Commande bloquée >2h"],
+    ["Slot surchargé / indisponible",    "Système lent / planté"],
+    ["✏️ Autre (écrire ci-dessous)"]
+]
+
+ACTIONS = [
+    ["📞 Contact coordinateur",     "🔄 Réaffectation livreur"],
+    ["🔁 Substitution produit",     "⬆️ Escalade équipe IT"],
+    ["📅 Rééquilibrage créneaux",   "👤 Contact client direct"],
+    ["✏️ Autre (écrire ci-dessous)"]
 ]
 
 CLIENT_CHOICES  = [["✅ Non — géré avant", "⚠️ Oui — client a appelé d'abord"]]
@@ -187,9 +202,9 @@ async def get_type(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "📝 *Étape 2/6 — Description*\n\n"
-        "Décris brièvement ce qui s'est passé :",
+        "Choisis une description ou écris la tienne :",
         parse_mode="Markdown",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=ReplyKeyboardMarkup(DESCRIPTIONS, one_time_keyboard=True, resize_keyboard=True)
     )
     return DESCRIPTION
 
@@ -211,7 +226,7 @@ async def get_zone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🔧 *Étape 4/6 — Action menée*\n\n"
         "Qu'as-tu fait pour gérer cet incident ?",
         parse_mode="Markdown",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=ReplyKeyboardMarkup(ACTIONS, one_time_keyboard=True, resize_keyboard=True)
     )
     return ACTION
 
