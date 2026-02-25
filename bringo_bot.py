@@ -73,11 +73,25 @@ STATUT_CHOICES  = [["✅ Résolu", "🔄 En cours", "⬆️ Escaladé"]]
 
 # ─── CONNEXION GOOGLE SHEETS ─────────────────────────────────────────────────
 def get_sheet():
+    import json
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive"
     ]
-    creds  = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=scope)
+    # Lire depuis variable d'environnement ou fichier
+    creds_json = os.environ.get("GOOGLE_CREDENTIALS")
+    if creds_json:
+        import base64
+        try:
+            # Essayer base64 d'abord
+            info = json.loads(base64.b64decode(creds_json).decode())
+        except Exception:
+            # Sinon JSON direct
+            info = json.loads(creds_json)
+        creds = Credentials.from_service_account_info(info, scopes=scope)
+    else:
+        creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=scope)
+
     client = gspread.authorize(creds)
     sh     = client.open_by_key(GOOGLE_SHEET_ID)
 
